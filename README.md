@@ -15,3 +15,5 @@ The simple tool that allows inspecting the utilization of Sitecore caches and th
 
 ## Download  
 Downloads are available via [GitHub Releases](https://github.com/sitecoresupport/Cache-Size-Viewer/releases)
+
+[![Github All Releases](https://img.shields.io/github/downloads/SitecoreSupport/Cache-Size-Viewer/total.svg)](https://github.com/SitecoreSupport/Cache-Size-Viewer/releases)
