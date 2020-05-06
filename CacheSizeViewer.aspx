@@ -68,20 +68,21 @@
         protected void Page_Load(object sender, EventArgs e)
         {
             // Render Header
-            string pageVersion = "1.0.0";
+            string pageVersion = "1.1.0";
             string pageName = "Sitecore Cache Size Viewer";
             Header.InnerHtml = string.Format("<h2>{0}</h2><h6>Version:&nbsp;{1}</h6>", pageName, pageVersion);
 
+            ICacheInfo[] allCaches = CacheManager.GetAllCaches();
+
             // Render Statistics
             CacheStatistics statistics = CacheManager.GetStatistics();
-            Totals.InnerHtml = RenderOverviewTable(statistics);
+            Totals.InnerHtml = RenderOverviewTable(statistics, allCaches);
 
-            // Render Cache Sizes
-            ICacheInfo[] allCaches = CacheManager.GetAllCaches();
+            // Render Cache Sizes            
             Caches.InnerHtml = RenderCacheSizeTable(allCaches);
         }
 
-        private string RenderOverviewTable(CacheStatistics statistics)
+        private string RenderOverviewTable(CacheStatistics statistics, ICacheInfo[] allCaches)
         {
             List<List<CellEntry>> tableData = new List<List<CellEntry>>();
 
@@ -92,8 +93,23 @@
 
             tableData.Add(new List<CellEntry> { "Total Entries Count", statistics.TotalCount.ToString() });
 
-            tableData.Add(new List<CellEntry>{ "Total Size",statistics.TotalSize.ToString() + separator +
+            tableData.Add(new List<CellEntry>{ "Total Caches Size",statistics.TotalSize.ToString() + separator +
                 string.Format("({0})", FormatSize(statistics.TotalSize, separator))});
+
+            long totalCachesSizeLimit = SummarizeCacheSizeLimits(allCaches);
+            string totalCachesSizeLimitPresentation = string.Empty;
+
+            if (totalCachesSizeLimit == long.MaxValue)
+            {
+                totalCachesSizeLimitPresentation = "Unlimited";
+            }
+            else
+            {
+                totalCachesSizeLimitPresentation = totalCachesSizeLimit + separator +
+                     string.Format("({0})", FormatSize(totalCachesSizeLimit, separator));
+            }
+
+            tableData.Add(new List<CellEntry> { "Total Max Caches Size", totalCachesSizeLimitPresentation });
 
             tableData.Add(new List<CellEntry> { "DisableCacheSizeLimits", Settings.Caching.DisableCacheSizeLimits.ToString() });
 
@@ -256,6 +272,23 @@
             long utilization = 100 * cacheSize / cacheMaxSize;
 
             return utilization;
+        }
+
+        private long SummarizeCacheSizeLimits(ICacheInfo[] allCaches)
+        {
+            if (allCaches.Where(c => c.MaxSize == long.MaxValue).Any())
+            {
+                return long.MaxValue;
+            }
+
+            long totalMaxCachesSize = 0;
+
+            foreach (var cache in allCaches)
+            {
+                totalMaxCachesSize += cache.MaxSize;
+            }
+
+            return totalMaxCachesSize;
         }
     </script>
 
