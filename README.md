@@ -7,6 +7,8 @@ The simple tool that allows inspecting the utilization of Sitecore caches and th
 ## Compatibility
 * Sitecore 8.2.x
 * Sitecore 9.x
+* Sitecore 10.x
+
 
 
 ## Usage
