@@ -8,6 +8,7 @@
 <head>
     <title>Cache Size Viewer</title>
     <meta content="C#" name="CODE_LANGUAGE">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
 
     <style type="text/css">
         body {
@@ -47,6 +48,34 @@
         }
     </style>
 
+    <script>
+        $(document).ready(function () {
+            $("#input-filter").on('input', function () {
+                var cacheName = $("#input-filter")[0].value;
+
+                localStorage.setItem(key, cacheName);
+
+                $('#table-caches > tbody > tr').each(function () {
+                    if ($(this).html().toUpperCase().includes(cacheName.toUpperCase()) || $(this).html().includes("Utilization,%")) {
+                        $(this).show();
+                    } else {
+                        $(this).hide();
+                    }
+                });
+            });
+
+            var key = "cacheSizeViewer-cacheName";
+            var localStorage = window.localStorage;
+            var cacheName = localStorage.getItem(key);
+
+            if (cacheName != null && cacheName.length > 0) {
+                $("#input-filter")[0].value = cacheName;
+
+                $("#input-filter").trigger('input');
+            }
+        });
+    </script>
+
     <script runat="server">
         public class CellEntry
         {
@@ -68,7 +97,7 @@
         protected void Page_Load(object sender, EventArgs e)
         {
             // Render Header
-            string pageVersion = "1.1.0";
+            string pageVersion = "1.2.0";
             string pageName = "Sitecore Cache Size Viewer";
             Header.InnerHtml = string.Format("<h2>{0}</h2><h6>Version:&nbsp;{1}</h6>", pageName, pageVersion);
 
@@ -79,7 +108,18 @@
             Totals.InnerHtml = RenderOverviewTable(statistics, allCaches);
 
             // Render Cache Sizes            
-            Caches.InnerHtml = RenderCacheSizeTable(allCaches);
+            Caches.InnerHtml = RenderFilterComponent();
+
+            Caches.InnerHtml += RenderCacheSizeTable(allCaches);
+        }
+
+        private string RenderFilterComponent()
+        {
+            string separator = "&nbsp";
+
+            string html = "<div style='padding: 20px 20px 20px 0px'>Filter by cache name:" + separator + "<input type='text' id='input-filter'></div>";
+
+            return html;
         }
 
         private string RenderOverviewTable(CacheStatistics statistics, ICacheInfo[] allCaches)
@@ -167,12 +207,12 @@
                 tableData.Add(data);
             }
 
-            string html = RenderTable(tableData);
+            string html = RenderTable(tableData, "table-caches");
 
             return html;
         }
 
-        private string RenderTable(List<List<CellEntry>> data)
+        private string RenderTable(List<List<CellEntry>> data, string tableId = null)
         {
             if (data == null || data.Count < 1)
             {
@@ -185,7 +225,15 @@
             // Header 
             StringBuilder html = new StringBuilder();
 
-            html.Append("<table>");
+            if (!string.IsNullOrWhiteSpace(tableId))
+            {
+                html.Append("<table id='" + tableId + "'>");
+            }
+            else
+            {
+                html.Append("<table>");
+            }
+
             html.Append("<tr>");
 
             html.AppendFormat("<th>{0}</th>", "#");
